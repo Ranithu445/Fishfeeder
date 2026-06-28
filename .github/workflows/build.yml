@@ -9,11 +9,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # This is the 'step' that fixes the error. 
-      # It is just instructions for the computer, not a filename.
-      - name: Fix broken PPA
+      # This is the "Nuclear" option: Clear all PPA sources entirely
+      - name: Clear Broken Sources
         run: |
-          sudo rm -f /etc/apt/sources.list.d/openjdk-r-ubuntu-ppa-*.list
+          sudo rm -rf /etc/apt/sources.list.d/*
           sudo apt-get update
 
       - name: Build with Buildozer
