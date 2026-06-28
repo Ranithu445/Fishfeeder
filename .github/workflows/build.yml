@@ -8,21 +8,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      # This is the "Nuclear" option: Clear all PPA sources entirely
-      - name: Clear Broken Sources
+
+      - name: Install System Dependencies
         run: |
-          sudo rm -rf /etc/apt/sources.list.d/*
           sudo apt-get update
+          # We only install the essentials, avoiding any external PPA repositories
+          sudo apt-get install -y python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          pip3 install --user --upgrade buildozer cython
 
       - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          buildozer_version: stable
-          
+        run: |
+          # Ensure buildozer is in path
+          export PATH=$PATH:~/.local/bin/
+          # Build the APK
+          buildozer android debug
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: package
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
