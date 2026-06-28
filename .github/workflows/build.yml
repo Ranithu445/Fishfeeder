@@ -5,7 +5,6 @@ on:
 
 jobs:
   build:
-    # Using 22.04 ensures full compatibility with Buildozer's dependencies
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -15,6 +14,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
           pip install --upgrade cython buildozer
+
+      # THIS IS THE NEW STEP THAT FIXES YOUR ERROR
+      - name: Accept Android Licenses
+        run: |
+          mkdir -p "$HOME/.android"
+          touch "$HOME/.android/repositories.cfg"
+          # This command forces the SDK manager to accept all licenses
+          yes | sdkmanager --licenses || true
 
       - name: Build with Buildozer
         run: |
