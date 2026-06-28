@@ -1,236 +1,89 @@
-from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.label import Label
-from kivy.uix.button import Button
-from kivy.uix.popup import Popup
-from kivy.uix.textinput import TextInput
+from kivymd.app import MDApp
+from kivymd.uix.screen import MDScreen
+from kivymd.uix.card import MDCard
+from kivymd.uix.label import MDLabel
+from kivymd.uix.button import MDRaisedButton
+from kivy.core.window import Window
 from kivy.clock import Clock
-from kivy.graphics import Color, Rectangle
+import time
 
-from datetime import datetime
+# For desktop testing, simulates a mobile aspect ratio
+Window.size = (360, 640)
 
-
-# ================= ANDROID SAFE MODE =================
-
-arduino = None
-connected = False
-
-
-# ================= STATE =================
-
-distance = "--"
-alive = 2
-
-
-# ================= APP =================
-
-class FeederUI(BoxLayout):
-
-    def __init__(self, **kwargs):
-        super().__init__(orientation="vertical", **kwargs)
-
-        self.padding = 20
-        self.spacing = 10
-
-        with self.canvas.before:
-            Color(0.05, 0.07, 0.12, 1)
-            self.bg = Rectangle(size=self.size, pos=self.pos)
-
-        self.bind(size=self._update_bg, pos=self._update_bg)
-
-
-        # TITLE
-        self.title = Label(
-            text="SMART FISH FEEDER SYSTEM",
-            font_size=22,
-            bold=True
-        )
-        self.add_widget(self.title)
-
-
-        # STATUS
-        self.status = Label(
-            text="STARTING...",
-            font_size=18
-        )
-        self.add_widget(self.status)
-
-
-        # CLOCK
-        self.clock = Label(
-            text="",
-            font_size=18
-        )
-        self.add_widget(self.clock)
-
-
-        # TIMER
-        self.timer = Label(
-            text="00:00:00",
-            font_size=40,
-            bold=True
-        )
-        self.add_widget(self.timer)
-
-
-        # DISTANCE
-        self.distance_lbl = Label(
-            text="Distance: -- cm"
-        )
-        self.add_widget(self.distance_lbl)
-
-
-        # FEED BUTTON
-        self.feed_btn = Button(
-            text="FEED NOW",
-            font_size=20,
-            background_color=(0,1,1,1)
-        )
-
-        self.feed_btn.bind(
-            on_press=self.show_passcode
-        )
-
-        self.add_widget(self.feed_btn)
-
-
-        Clock.schedule_interval(
-            self.update_ui,
-            1
-        )
-
-
-    def _update_bg(self, *args):
-        self.bg.size = self.size
-        self.bg.pos = self.pos
-
-
-
-    # ================= PASSWORD =================
-
-    def show_passcode(self, instance):
-
-        layout = BoxLayout(
+class FishFeederApp(MDApp):
+    def build(self):
+        # 1. Professional Theme Configuration
+        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.primary_palette = "Teal"
+        
+        # 2. Main Screen Layout
+        screen = MDScreen()
+        
+        # 3. Main Container Card (The "Pro" Look)
+        self.card = MDCard(
+            size_hint=(0.9, 0.8),
+            pos_hint={"center_x": 0.5, "center_y": 0.5},
+            elevation=10,
+            padding="20dp",
+            spacing="15dp",
             orientation="vertical"
         )
-
-
-        self.pass_input = TextInput(
-            password=True,
-            hint_text="Enter passcode"
+        
+        # 4. UI Elements
+        self.lbl_title = MDLabel(
+            text="SMART FISH FEEDER",
+            halign="center",
+            font_style="H5",
+            theme_text_color="Primary"
         )
-
-
-        btn = Button(
-            text="CONFIRM"
+        
+        self.lbl_time = MDLabel(
+            text="00:00:00",
+            halign="center",
+            font_style="H4",
+            theme_text_color="Custom",
+            text_color=(0, 1, 1, 1) # Cyan color
         )
-
-
-        layout.add_widget(
-            self.pass_input
+        
+        self.lbl_sensor = MDLabel(
+            text="Distance: -- cm",
+            halign="center",
+            theme_text_color="Secondary"
         )
-
-        layout.add_widget(
-            btn
+        
+        # 5. Feed Button
+        self.btn_feed = MDRaisedButton(
+            text="FEED NOW",
+            pos_hint={"center_x": 0.5},
+            size_hint=(0.6, 0.1)
         )
-
-
-        popup = Popup(
-            title="Security Check",
-            content=layout,
-            size_hint=(0.7,0.4)
-        )
-
-
-        def check(instance):
-
-            if self.pass_input.text == "9876":
-
-                self.send_feed()
-
-            else:
-
-                self.status.text = "WRONG PASSCODE ❌"
-
-
-            popup.dismiss()
-
-
-        btn.bind(
-            on_press=check
-        )
-
-
-        popup.open()
-
-
-
-    # ================= FEED =================
-
-    def send_feed(self):
-
-        # Android safe simulation
-        self.status.text = "FEED SENT ⚡"
-
-
-
-    # ================= LOOP =================
+        self.btn_feed.bind(on_release=self.feed_action)
+        
+        # 6. Assemble
+        self.card.add_widget(self.lbl_title)
+        self.card.add_widget(self.lbl_time)
+        self.card.add_widget(self.lbl_sensor)
+        self.card.add_widget(self.btn_feed)
+        screen.add_widget(self.card)
+        
+        # 7. Start the background clock
+        Clock.schedule_interval(self.update_ui, 1)
+        
+        return screen
 
     def update_ui(self, dt):
+        # Update Time
+        self.lbl_time.text = time.strftime("%H:%M:%S")
+        
+        # Add your hardware sensor logic here!
+        # Example: self.lbl_sensor.text = f"Distance: {get_sensor_value()} cm"
 
-        now = datetime.now()
+    def feed_action(self, instance):
+        # Trigger your physical hardware/relay here
+        print("Feeding sequence initiated!")
+        self.lbl_title.text = "FEEDING..."
+        # Reset text after 2 seconds
+        Clock.schedule_once(lambda dt: setattr(self.lbl_title, 'text', "SMART FISH FEEDER"), 2)
 
-
-        self.clock.text = now.strftime(
-            "%H:%M:%S | %Y-%m-%d"
-        )
-
-
-        # 12 hour countdown
-
-        sec = (
-            now.hour * 3600 +
-            now.minute * 60 +
-            now.second
-        )
-
-
-        feed_time = 12 * 3600
-
-
-        if sec < feed_time:
-            remaining = feed_time - sec
-        else:
-            remaining = (24*3600) - sec + feed_time
-
-
-
-        h = remaining // 3600
-        m = (remaining % 3600) // 60
-        s = remaining % 60
-
-
-        self.timer.text = (
-            f"{h:02}:{m:02}:{s:02}"
-        )
-
-
-        self.distance_lbl.text = (
-            f"Distance: {distance} cm"
-        )
-
-
-        self.status.text = (
-            "OFFLINE MODE 🔌"
-        )
-
-
-
-class FeederApp(App):
-
-    def build(self):
-        return FeederUI()
-
-
-
-FeederApp().run()
+if __name__ == '__main__':
+    FishFeederApp().run()
