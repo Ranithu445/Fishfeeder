@@ -1,0 +1,33 @@
+BoxLayout:
+    orientation: 'vertical'
+    padding: 20
+    spacing: 15
+
+    Label:
+        text: "MISSION: FISH FEEDER"
+        font_size: '24sp'
+        size_hint_y: 0.1
+
+    Label:
+        id: dist_label
+        text: "Distance: -- cm"
+        font_size: '20sp'
+        size_hint_y: 0.2
+
+    TextInput:
+        id: passcode_input
+        hint_text: "Enter Passcode (if limit reached)"
+        multiline: False
+        password: True
+        size_hint_y: 0.1
+
+    Button:
+        text: "FEED NOW"
+        size_hint_y: 0.3
+        # We pass the text inside the passcode_input to the function
+        on_release: app.feed_fish(passcode_input.text)
+
+    Label:
+        id: status_label
+        text: "Status: Standby"
+        size_hint_y: 0.2
