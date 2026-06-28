@@ -9,10 +9,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - - name: Install System Dependencies
+      - name: Install System Dependencies
         run: |
           sudo apt-get update
-          # We updated libtinfo5 to libtinfo6 to match the newer Ubuntu environment
+          # Updated libtinfo5 to libtinfo6
           sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev python3-pip openjdk-17-jdk
           pip3 install --user --upgrade buildozer cython
 
