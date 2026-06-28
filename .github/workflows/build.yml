@@ -9,6 +9,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      # This is the 'step' that fixes the error. 
+      # It is just instructions for the computer, not a filename.
+      - name: Fix broken PPA
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/openjdk-r-ubuntu-ppa-*.list
+          sudo apt-get update
+
       - name: Build with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
