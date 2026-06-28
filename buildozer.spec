@@ -3,9 +3,9 @@ title = Fishfeeder Control Panel
 package.name = fishfeeder
 package.domain = com.fishfeeder.app
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
+# Added 'json' to the list below so your data log is included
+source.include_exts = py,png,jpg,kv,atlas,json
 version = 0.1
-# Added kivymd to requirements
 requirements = python3,kivy,kivymd
 orientation = portrait
 fullscreen = 0
