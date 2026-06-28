@@ -28,13 +28,16 @@ jobs:
           unzip -q cmdline.zip -d $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
           mv $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/cmdline-tools $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
           
-          # 3. Create the 'shortcut' (symlink) that Buildozer is looking for
+          # 3. Create the symlink
           ln -s $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
           
           # 4. Pre-accept licenses
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
           echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo -e "\n84831b9409646a918e30573bab4c9c91346d870d" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
+          
+          # 5. FORCE INSTALL the specific build tools
+          yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk "build-tools;34.0.0" "platforms;android-34"
 
       - name: Build with Buildozer
         run: |
