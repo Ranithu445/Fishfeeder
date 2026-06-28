@@ -9,11 +9,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install System Dependencies
+      - - name: Install System Dependencies
         run: |
           sudo apt-get update
-          # We only install the essentials, avoiding any external PPA repositories
-          sudo apt-get install -y python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          # We updated libtinfo5 to libtinfo6 to match the newer Ubuntu environment
+          sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev python3-pip openjdk-17-jdk
           pip3 install --user --upgrade buildozer cython
 
       - name: Build with Buildozer
