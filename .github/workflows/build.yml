@@ -15,19 +15,24 @@ jobs:
           sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
           pip install --upgrade cython buildozer
 
-      - name: Prepare Android SDK
+      - name: Manually Install Android SDK Command Line Tools
         run: |
-          # 1. Create the directories where Buildozer expects the SDK
-          mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
+          # 1. Create the SDK directory structure
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
           
-          # 2. Write the license acceptance files directly
-          echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo -e "\n84831b9409646a918e30573bab4c9c91346d870d" > /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
+          # 2. Download the modern command line tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+          
+          # 3. Unzip them into the expected folder
+          unzip -q cmdline-tools.zip -d $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+          
+          # 4. Rename the folder to 'latest' so the SDK recognizes it
+          mv $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/cmdline-tools $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
 
       - name: Build with Buildozer
         run: |
-          # Set the SDK home to the folder we just prepared
-          export ANDROID_HOME=/home/runner/.buildozer/android/platform/android-sdk
+          # Force the path to look for tools here
+          export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
           buildozer -v android debug
 
       - name: Upload APK
