@@ -5,7 +5,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Using 22.04 ensures full compatibility with Buildozer's dependencies
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
