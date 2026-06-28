@@ -1,11 +1,12 @@
 [app]
-title = My Application
+title = Fishfeeder Control Panel
 package.name = fishfeeder
-package.domain = org.test
+package.domain = com.fishfeeder.app
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 0.1
-requirements = python3,kivy
+# Added kivymd to requirements
+requirements = python3,kivy,kivymd
 orientation = portrait
 fullscreen = 0
 
@@ -14,15 +15,10 @@ log_level = 2
 warn_on_root = 1
 
 [android]
-# CRITICAL: These versions must match the pre-installed tools in your build.yml
 android.api = 34
 android.sdk_build_tools_version = 34.0.0
 android.ndk = 25b
 android.minapi = 21
 android.archs = arm64-v8a
-
-# Permissions
 android.permissions = INTERNET
-
-# This helps avoid issues with newer Android requirements
 p4a.branch = master
