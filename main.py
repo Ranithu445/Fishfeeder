@@ -1,65 +1,134 @@
-import json
-import os
-from datetime import datetime
-from kivy.app import App
-from kivy.clock import Clock
+import datetime
+from kivy.lang import Builder
+from kivymd.app import MDApp
+from kivymd.uix.screen import MDScreen
 
-class FishFeederApp(App):
-    DATA_FILE = "feed_log.json"
+# ==========================================
+# 1. YOUR KV LAYOUT DESIGN (The Visuals)
+# ==========================================
+KV = '''
+MDScreen:
+    md_bg_color: self.theme_cls.backgroundColor
 
-    def build(self):
-        # Schedule: Check clock every 60 seconds, check sensor every 5 seconds
-        Clock.schedule_interval(self.check_autopilot, 60)
-        Clock.schedule_interval(self.read_sensor, 5)
-        # Note: No 'return' needed; Kivy auto-loads fishfeeder.kv
-    
-    def load_data(self):
-        if os.path.exists(self.DATA_FILE):
-            with open(self.DATA_FILE, 'r') as f:
-                return json.load(f)
-        return {"manual_feeds": 0, "last_date": ""}
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: "16dp"
+        spacing: "20dp"
 
-    def save_data(self, data):
-        with open(self.DATA_FILE, 'w') as f:
-            json.dump(data, f)
+        # App Header
+        MDLabel:
+            text: "Smart Fish Feeder"
+            halign: "center"
+            font_style: "Display"
+            role: "small"
+            bold: True
+            size_hint_y: None
+            height: "60dp"
 
-    def feed_fish(self, passcode):
-        data = self.load_data()
-        today = datetime.now().strftime("%Y-%m-%d")
+        # Status Card
+        MDCard:
+            orientation: "vertical"
+            padding: "16dp"
+            size_hint: (1, None)
+            height: "140dp"
+            style: "elevated"
+            theme_bg_color: "Custom"
+            md_bg_color: self.theme_cls.surfaceContainerLowColor
+            radius: [16, 16, 16, 16]
 
-        # Reset count if it's a new day
-        if data["last_date"] != today:
-            data["manual_feeds"] = 0
-            data["last_date"] = today
-
-        # Check logic: < 2 manual feeds OR valid passcode
-        if data["manual_feeds"] < 2 or passcode == "9876":
-            self.root.ids.status_label.text = "Status: Feeding..."
-            # --- INSERT MOTOR ACTIVATION CODE HERE ---
-            print("Motor Activated!")
+            MDLabel:
+                text: "FEEDER STATUS"
+                font_style: "Label"
+                role: "large"
+                theme_text_color: "Secondary"
             
-            # Increment and save
-            data["manual_feeds"] += 1
-            self.save_data(data)
-        else:
-            self.root.ids.status_label.text = "Status: LIMIT REACHED"
+            MDLabel:
+                id: status_label
+                text: "Status: Ready"
+                font_style: "Headline"
+                role: "medium"
+                bold: True
+            
+            MDLabel:
+                id: last_fed_label
+                text: "Last Feeding: Not fed yet today"
+                font_style: "Body"
+                role: "medium"
+                theme_text_color: "Secondary"
 
-    def check_autopilot(self, dt):
-        now = datetime.now()
-        # Trigger at 00:00 (Midnight) or 12:00 (Noon)
-        if (now.hour == 0 or now.hour == 12) and now.minute == 0:
-            self.root.ids.status_label.text = "Status: AUTOPILOT ACTIVE"
-            # --- INSERT MOTOR ACTIVATION CODE HERE ---
-            print("Autopilot Feeding!")
+        # History Log Section
+        MDBoxLayout:
+            orientation: "vertical"
+            spacing: "8dp"
+            
+            MDLabel:
+                text: "Activity Log"
+                font_style: "Title"
+                role: "medium"
+                bold: True
+                size_hint_y: None
+                height: "30dp"
+                
+            MDCard:
+                padding: "12dp"
+                style: "outlined"
+                
+                MDLabel:
+                    id: log_label
+                    text: " App started successfully.\\n Waiting for manual feed command..."
+                    font_style: "Body"
+                    role: "small"
+                    halign: "left"
+                    valign: "top"
 
-    def read_sensor(self, dt):
-        # Stub for your sensor logic
-        try:
-            # Replace with actual sensor read
-            distance = 15 
-            self.root.ids.dist_label.text = f"Distance: {distance} cm"
-        except Exception as e:
-            self.root.ids.dist_label.text = "Sensor Error"
+        # Action Area (The Button)
+        MDBoxLayout:
+            size_hint_y: None
+            height: "80dp"
+            anchor_x: "center"
+            anchor_y: "center"
+            
+            MDButton:
+                style: "filled"
+                size_hint_x: .8
+                pos_hint: {"center_x": .5}
+                on_release: app.trigger_feeding()
+                
+                MDButtonText:
+                    text: "FEED NOW"
+                    pos_hint: {"center_x": .5, "center_y": .5}
+'''
+
+# ==========================================
+# 2. YOUR PYTHON LOGIC (The Brains)
+# ==========================================
+class FishFeederApp(MDApp):
+    def build(self):
+        # Configure App Theme
+        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.primary_palette = "Teal"
+        
+        # Load the combined string from above
+        return Builder.load_string(KV)
+
+    def trigger_feeding(self):
+        """
+        This function handles the action when the 'FEED NOW' button is pressed.
+        It updates the UI labels dynamically.
+        """
+        # Get current time stamp
+        now = datetime.datetime.now().strftime("%I:%M:%S %p")
+        
+        # Update the labels inside the layout using their IDs
+        self.root.ids.status_label.text = "Status: Feeding Dispensed!"
+        self.root.ids.last_fed_label.text = f"Last Feeding: Today at {now}"
+        
+        # Append to the history log
+        current_log = self.root.ids.log_label.text
+        new_entry = f"\\n [{now}] Manual feeding sequence activated successfully."
+        self.root.ids.log_label.text = current_log + new_entry
+
 
 if __name__ == '__main__':
+    # Launch the application
     FishFeederApp().run()
