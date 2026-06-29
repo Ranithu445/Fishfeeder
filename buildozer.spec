@@ -3,7 +3,7 @@ title = Fishfeeder Control Panel
 package.name = fishfeeder
 package.domain = com.fishfeeder.app
 source.dir = .
-# Added 'json' to the list below so your data log is included
+# Added 'json' to the list below so your data log is included a lol
 source.include_exts = py,png,jpg,kv,atlas,json
 version = 0.1
 requirements = python3,kivy,kivymd
