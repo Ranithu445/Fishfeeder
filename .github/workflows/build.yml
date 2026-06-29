@@ -13,20 +13,36 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update
-          # Added 'ant' and 'ccache' for stability
+          # Including ant and ccache to prevent common build hangs and speed up recompilation
           sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev python3-pip openjdk-17-jdk ant ccache
           pip3 install --user --upgrade buildozer cython
+
+      - name: Accept Android SDK Licenses
+        run: |
+          # Create the local android config directory
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          
+          # The Android SDK needs to be initialized first so the license tool exists
+          # We run a dummy buildozer command to force the setup of the SDK structure
+          # '|| true' ensures the step continues even if this dummy build fails
+          buildozer android debug || true
+          
+          # Now locate the sdkmanager and accept the licenses
+          SDK_MANAGER=$(find /home/runner/.buildozer/android/platform/android-sdk -name sdkmanager | head -n 1)
+          if [ -f "$SDK_MANAGER" ]; then
+            yes | "$SDK_MANAGER" --licenses || true
+          fi
 
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:~/.local/bin/
-          # Removed 'yes "y" |' to see the real error
-          # Added --verbose to get detailed logs
+          # -v provides verbose output so we can see if any specific steps fail
           buildozer -v android debug
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
-        if: always() # Uploads even if build fails so you can check logs
+        if: always()
         with:
           name: package
           path: bin/*.apk
