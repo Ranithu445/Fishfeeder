@@ -7,24 +7,38 @@ on:
 jobs:
   build:
     name: Build for Android
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Runs inside an official, pre-configured isolated container.
-      # Removed "yes |" to prevent Docker from crashing on the pipe symbol.
-      # The container handles license agreements natively!
-      - name: Build with Buildozer Container
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          command: buildozer android debug
-          buildozer_version: stable
+          python-version: '3.11'
 
-      # Automatically grabs the compiled binary from the container 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: package
-          path: ${{ steps.buildozer.outputs.filename }}
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          # Added libltdl-dev and libtool-bin to fix the macro compilation errors directly
+          sudo apt-get install -y git zip unzip autoconf automake libtool libtool-bin libltdl-dev pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev python3-pip openjdk-17-jdk ant ccache
+          pip3 install --upgrade pip
+          pip3 install cython virtualenv buildozer
+
+      - name: Setup Android SDK and Accept Licenses
+        run: |
+          buildozer android debug || true
+          SDK_MANAGER=$(find /home/runner/.buildozer/android/platform/android-sdk -name sdkmanager | head -n 1)
+          if [ -f "$SDK_MANAGER" ]; then
+            yes | "$SDK_MANAGER" --sdk_root=/home/runner/.buildozer/android/platform/android-sdk "platforms;android-33" "build-tools;37.0.0" "platform-tools"
+            yes | "$SDK_MANAGER" --sdk_root=/home/runner/.buildozer/android/platform/android-sdk --licenses
+          fi
+
+      - name: Clean Cache and Build Fresh APK
+        run: |
+          # Nuclear wipe of any corrupted caches
+          rm -rf .buildozer/
+          rm -rf ~/.buildozer/
+          
+          # Build with full logs
+          buildozer -v android debug
