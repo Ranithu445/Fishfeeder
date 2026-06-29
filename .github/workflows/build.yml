@@ -13,17 +13,20 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev python3-pip openjdk-17-jdk
+          # Added 'ant' and 'ccache' for stability
+          sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev python3-pip openjdk-17-jdk ant ccache
           pip3 install --user --upgrade buildozer cython
 
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:~/.local/bin/
-          # This pipes 'y' into buildozer to auto-accept all license prompts
-          yes "y" | buildozer android debug
+          # Removed 'yes "y" |' to see the real error
+          # Added --verbose to get detailed logs
+          buildozer -v android debug
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
+        if: always() # Uploads even if build fails so you can check logs
         with:
           name: package
           path: bin/*.apk
