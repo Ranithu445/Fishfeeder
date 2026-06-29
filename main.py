@@ -1,10 +1,19 @@
 import datetime
+
+# =========================================================================
+# 1. FORCE 9:16 RATIO (Must happen BEFORE any other Kivy/KivyMD imports)
+# =========================================================================
+from kivy.config import Config
+Config.set('graphics', 'width', '360')
+Config.set('graphics', 'height', '640')
+Config.set('graphics', 'resizable', '0')  # Locks the window to 9:16 ratio
+
 from kivy.lang import Builder
 from kivymd.app import MDApp
 from kivymd.uix.screen import MDScreen
 
 # ==========================================
-# 1. YOUR KV LAYOUT DESIGN (The Visuals)
+# 2. YOUR KV LAYOUT DESIGN (The Visuals)
 # ==========================================
 KV = '''
 MDScreen:
@@ -13,7 +22,7 @@ MDScreen:
     MDBoxLayout:
         orientation: 'vertical'
         padding: "16dp"
-        spacing: "20dp"
+        spacing: "16dp"
 
         # App Header
         MDLabel:
@@ -23,14 +32,14 @@ MDScreen:
             role: "small"
             bold: True
             size_hint_y: None
-            height: "60dp"
+            height: "50dp"
 
         # Status Card
         MDCard:
             orientation: "vertical"
             padding: "16dp"
             size_hint: (1, None)
-            height: "140dp"
+            height: "130dp"
             style: "elevated"
             theme_bg_color: "Custom"
             md_bg_color: self.theme_cls.surfaceContainerLowColor
@@ -60,6 +69,7 @@ MDScreen:
         MDBoxLayout:
             orientation: "vertical"
             spacing: "8dp"
+            size_hint_y: 1  # Takes up all remaining vertical space dynamically
             
             MDLabel:
                 text: "Activity Log"
@@ -72,6 +82,7 @@ MDScreen:
             MDCard:
                 padding: "12dp"
                 style: "outlined"
+                size_hint_y: 1
                 
                 MDLabel:
                     id: log_label
@@ -80,17 +91,18 @@ MDScreen:
                     role: "small"
                     halign: "left"
                     valign: "top"
+                    text_size: self.width, None
 
         # Action Area (The Button)
         MDBoxLayout:
             size_hint_y: None
-            height: "80dp"
+            height: "70dp"
             anchor_x: "center"
             anchor_y: "center"
             
             MDButton:
                 style: "filled"
-                size_hint_x: .8
+                size_hint_x: .9
                 pos_hint: {"center_x": .5}
                 on_release: app.trigger_feeding()
                 
@@ -100,7 +112,7 @@ MDScreen:
 '''
 
 # ==========================================
-# 2. YOUR PYTHON LOGIC (The Brains)
+# 3. YOUR PYTHON LOGIC (The Brains)
 # ==========================================
 class FishFeederApp(MDApp):
     def build(self):
@@ -113,8 +125,8 @@ class FishFeederApp(MDApp):
 
     def trigger_feeding(self):
         """
-        This function handles the action when the 'FEED NOW' button is pressed.
-        It updates the UI labels dynamically.
+        Handles the action when the 'FEED NOW' button is pressed.
+        Updates the UI labels dynamically.
         """
         # Get current time stamp
         now = datetime.datetime.now().strftime("%I:%M:%S %p")
