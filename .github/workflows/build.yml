@@ -13,12 +13,13 @@ jobs:
         uses: actions/checkout@v4
 
       # Runs inside an official, pre-configured isolated container.
-      # This bypasses all host-level autoconf/libtool macro errors.
+      # Removed "yes |" to prevent Docker from crashing on the pipe symbol.
+      # The container handles license agreements natively!
       - name: Build with Buildozer Container
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
-          command: yes | buildozer android debug
+          command: buildozer android debug
           buildozer_version: stable
 
       # Automatically grabs the compiled binary from the container 
