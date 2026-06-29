@@ -13,31 +13,30 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update
-          # Including ant and ccache to prevent common build hangs and speed up recompilation
           sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev python3-pip openjdk-17-jdk ant ccache
           pip3 install --user --upgrade buildozer cython
 
-      - name: Accept Android SDK Licenses
+      - name: Setup Android SDK and Accept Licenses
         run: |
-          # Create the local android config directory
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          
-          # The Android SDK needs to be initialized first so the license tool exists
-          # We run a dummy buildozer command to force the setup of the SDK structure
-          # '|| true' ensures the step continues even if this dummy build fails
+          # Run a dummy buildozer command to force-create the SDK directory structure
           buildozer android debug || true
           
-          # Now locate the sdkmanager and accept the licenses
+          # Locate the SDK manager dynamically
           SDK_MANAGER=$(find /home/runner/.buildozer/android/platform/android-sdk -name sdkmanager | head -n 1)
+          
+          # Pre-install the specific build-tools and platform components required
+          # The 'yes |' pipes the license acceptance automatically
           if [ -f "$SDK_MANAGER" ]; then
-            yes | "$SDK_MANAGER" --licenses || true
+            yes | "$SDK_MANAGER" --sdk_root=/home/runner/.buildozer/android/platform/android-sdk "platforms;android-33" "build-tools;37.0.0" "platform-tools"
+            
+            # Explicitly accept all remaining licenses
+            yes | "$SDK_MANAGER" --sdk_root=/home/runner/.buildozer/android/platform/android-sdk --licenses
           fi
 
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:~/.local/bin/
-          # -v provides verbose output so we can see if any specific steps fail
+          # -v provides the verbose output needed for debugging
           buildozer -v android debug
 
       - name: Upload artifacts
