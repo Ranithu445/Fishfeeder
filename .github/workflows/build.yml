@@ -26,28 +26,30 @@ jobs:
 
       - name: Setup Android SDK and Accept Licenses
         run: |
-          # 1. Start a dummy build so Buildozer downloads the exact SDK tools it needs based on your buildozer.spec
+          # 1. Run a dummy build so Buildozer pulls down the initial SDK structure
           buildozer android debug || true
           
-          # 2. Dynamically locate where Buildozer installed the sdkmanager executable
-          SDK_MANAGER=$(find /home/runner/.buildozer/android/platform/ -name sdkmanager | head -n 1)
+          # 2. Explicitly define the SDK root directory path
+          SDK_ROOT="/home/runner/.buildozer/android/platform/android-sdk"
+          SDK_MANAGER="$SDK_ROOT/tools/bin/sdkmanager"
           
-          # 3. If found, automatically accept all licenses for the downloaded tools
+          # 3. Pass the mandatory --sdk_root flag to fix the IllegalArgumentException crash
           if [ -f "$SDK_MANAGER" ]; then
-            echo "Found sdkmanager at $SDK_MANAGER. Accepting licenses..."
-            yes | "$SDK_MANAGER" --licenses
+            echo "Found sdkmanager. Accepting licenses with explicit sdk_root..."
+            yes | "$SDK_MANAGER" --sdk_root="$SDK_ROOT" --licenses
           else
-            echo "sdkmanager not found yet. Proceeding to main build step."
+            # Fallback dynamic search if paths change
+            DYNAMIC_MANAGER=$(find /home/runner/.buildozer/android/platform/ -name sdkmanager | head -n 1)
+            if [ -f "$DYNAMIC_MANAGER" ]; then
+              echo "Found sdkmanager dynamically at $DYNAMIC_MANAGER"
+              yes | "$DYNAMIC_MANAGER" --sdk_root="$SDK_ROOT" --licenses
+            fi
           fi
 
-      - name: Clean Cache and Build Fresh APK
+      - name: Build APK
         run: |
           export PATH=$PATH:~/.local/bin/
-          
-          # Wipe old runner state to prevent tool caching conflicts
-          rm -rf .buildozer/
-          
-          # Run the actual target build
+          # Removed the 'rm -rf' line so we don't accidentally wipe the SDK we just authorized
           buildozer -v android debug
 
       - name: Upload artifacts
